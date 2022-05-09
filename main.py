@@ -36,7 +36,7 @@ def test_linear_regression():
 def softmax_func(x, w, c):  # loss func!
     """
     softmax_func is
-
+    Wx + b
     :param x: X - Matrix with n x m dimensions (n pixels of each image, m images dataset)
     :param c: C - Matrix is a diagonal matrix with m x l (l different classes)
     :param w: W - Matrix is a weights' matrix with dimensions n x l
