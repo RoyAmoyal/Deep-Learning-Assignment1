@@ -49,7 +49,7 @@ def softmax_func(x, w, c):  # loss func!
     print(c.shape)
     # print("scipy softmax", softmax(x.T @ w))
     f_w = np.sum(
-        np.multiply(c, np.log(np.divide(np.exp(x.T @ w), (np.sum(np.exp(x.T @ w), axis=1)).reshape((m_dim, 1))))))
+        -1 * np.multiply(c, np.log(np.divide(np.exp(x.T @ w), (np.sum(np.exp(x.T @ w), axis=1)).reshape((m_dim, 1))))))
     return f_w
 
 
@@ -126,14 +126,12 @@ def loss_func_SGD(loss_grad, x, w, c=None, mini_batch=4, learning_rate=0.001):
         return new_w
     else:  # multi Logistic Regression (softmax)
         new_w = w.copy()
-        iteration = 1
-        batch_begin = iteration * mini_batch - mini_batch
-        batch_end = (iteration * mini_batch)
+        batch_begin = 0
+        batch_end = mini_batch - 1
         while batch_end <= x.shape[1]:  # until we still got enough images in the current epoch for the mini-batch
             new_w = new_w - learning_rate * loss_grad(x[:, batch_begin:batch_end], new_w, c[batch_begin:batch_end, :])
-            iteration += 1
-            batch_begin = iteration * mini_batch - mini_batch + 1
-            batch_end = (iteration * mini_batch) + 1
+            batch_begin += mini_batch
+            batch_end += mini_batch
         # calculate the rest of the images when the number of them is less than the mini batch
         new_w = new_w - learning_rate * loss_grad(x[:, x.shape[1] - batch_end: x.shape[1]], new_w, c[x.shape[1] - batch_end: x.shape[1], :])
     return new_w
@@ -164,8 +162,6 @@ if __name__ == "__main__":
 
     n_dim, m_dim = given_x.shape  # 12 and 4
     l_dim = given_c.shape[1]      # 2
-
-
     rand_w = np.random.rand(n_dim, l_dim)
 
 
@@ -183,15 +179,17 @@ if __name__ == "__main__":
     # print("check sanity",mat1.T*weights)
 
 
-    print(softmax_func(given_x, rand_w, given_c))
+    print("softmax:", softmax_func(given_x, rand_w, given_c))
 
     data = given_x
     new_w2 = rand_w
-    for epoch in range(1000):
-        new_w2 = loss_func_SGD(gradient_softmax, data, new_w2, c=given_c, mini_batch=1)
-    print(new_w2)
+    print(given_x.T @ new_w2)
+    for epoch in range(10010):
+        new_w2 = loss_func_SGD(gradient_softmax, data, new_w2, c=given_c, mini_batch=4)
+    print(given_x.T @ new_w2)
 
-    print(softmax_func(given_x, new_w2, given_c))
+    print("softmax:", softmax_func(given_x, new_w2, given_c))
+
     # m,b = new_w2
     # print(data)
     # x = data[0, :]
