@@ -20,7 +20,7 @@ def softmax_func(x, w, c):  # loss func!
 
 def gradient_softmax(x, w, c):
     # print("shape c",c.shape)
-    m_dim2 = x.shape[1] # could be the batch size
+    m_dim2 = x.shape[1]  # could be the batch size
     # print(x.shape)
     # print(w.shape)
     # print(c.shape)
@@ -30,3 +30,11 @@ def gradient_softmax(x, w, c):
     soft_grad = (x @ (np.divide(np.exp(x.T @ w), (np.sum(np.exp(x.T @ w), axis=1)).reshape((m_dim2, 1))) - c)) \
                 / x.shape[1]
     return soft_grad
+
+
+def relu(x):
+    return np.maximum(x, 0)
+
+
+def grad_relu(x):
+    return (x > 0) * 1

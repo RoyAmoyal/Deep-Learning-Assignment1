@@ -33,10 +33,11 @@ def test_linear_regression():
     plt.plot([min(x), max(x)], [min(m * x + b), max(m * x + b)], color='green')  # regression line
     plt.show()
 
+
 def softmax_func(x, w, c):  # loss func!
     """
     softmax_func is
-
+    Wx + b
     :param x: X - Matrix with n x m dimensions (n pixels of each image, m images dataset)
     :param c: C - Matrix is a diagonal matrix with m x l (l different classes)
     :param w: W - Matrix is a weights' matrix with dimensions n x l
@@ -55,7 +56,7 @@ def softmax_func(x, w, c):  # loss func!
 
 def gradient_softmax(x, w, c):
     # print("shape c",c.shape)
-    m_dim2 = x.shape[1] # could be the batch size
+    m_dim2 = x.shape[1]  # could be the batch size
     # print(x.shape)
     # print(w.shape)
     # print(c.shape)
@@ -67,7 +68,7 @@ def gradient_softmax(x, w, c):
     return soft_grad
 
 
-def gradient_linear(x, y, w):
+def gradient_linear(x, y, theta):
     """
     gradient_linear is a function with a close formula for the gradient of the residual errors (D_m,D_b) when
                 m is the slope and b is the bias/offset from the x-axis.
@@ -79,7 +80,7 @@ def gradient_linear(x, y, w):
     :return:
     """
     samples = x.shape[0]  # the number of samples
-    m, b = w
+    m, b = theta
     y_pred = m * x + b
     d_m = (-2 / samples) * np.sum(x @ (y - y_pred))  # Derivative wrt m
     d_b = (-2 / samples) * np.sum(y - y_pred)  # Derivative wrt c
@@ -87,7 +88,8 @@ def gradient_linear(x, y, w):
     return np.array([d_m, d_b])
 
 
-def loss_func_SGD(loss_grad, x, w, c=None, mini_batch=4, learning_rate=0.001):
+# TODO: WE HAVE TO SHUFFLE THE DATA BEFORE THE MINIBATCH
+def loss_func_SGD(loss_grad, x, theta, c=None, mini_batch=4, learning_rate=0.001):
     """
     loss_func_SGD is a function that finding the minimum of the loss function, given the gradient of the loss function
     and the current weight. The fuction is finding the minimum using Stochastic Gradient Decent method
@@ -104,7 +106,7 @@ def loss_func_SGD(loss_grad, x, w, c=None, mini_batch=4, learning_rate=0.001):
     """
 
     if c is None:  # Linear Regression
-        new_w = w.copy()
+        new_theta = theta.copy()
         iteration = 1
         # if mini_batch == 1:
         #     batch_begin = 0
@@ -115,35 +117,36 @@ def loss_func_SGD(loss_grad, x, w, c=None, mini_batch=4, learning_rate=0.001):
             # new_m = m - learning_rate*f_m
             # new_b = b - learning_rate*f_b
             # new_w = [m - learning_rate*f_m, b - learning_rate*f_b]
-            new_w = new_w - learning_rate * gradient_linear(x[0, batch_begin:batch_end], x[1, batch_begin:batch_end],
-                                                            new_w)
+            new_theta = new_theta - learning_rate * gradient_linear(x[0, batch_begin:batch_end],
+                                                                    x[1, batch_begin:batch_end],
+                                                                    new_theta)
             iteration += 1
             batch_begin = iteration * mini_batch - mini_batch + 1
             batch_end = (iteration * mini_batch) + 1
         # update the weights for the last data if it wasn't used in the iterations because of the batch size.
-        new_w = new_w - learning_rate * gradient_linear(x[0, x.shape[1] - batch_end: x.shape[1]],
-                                                        x[1, x.shape[1] - batch_end: x.shape[1]], new_w)
-        return new_w
+        new_theta = new_theta - learning_rate * gradient_linear(x[0, x.shape[1] - batch_end: x.shape[1]],
+                                                        x[1, x.shape[1] - batch_end: x.shape[1]], new_theta)
+        return new_theta
     else:  # multi Logistic Regression (softmax)
-        new_w = w.copy()
+        new_theta = theta.copy()
         batch_begin = 0
         batch_end = mini_batch - 1
         while batch_end <= x.shape[1]:  # until we still got enough images in the current epoch for the mini-batch
-            new_w = new_w - learning_rate * loss_grad(x[:, batch_begin:batch_end], new_w, c[batch_begin:batch_end, :])
+            new_theta = new_theta - learning_rate * loss_grad(x[:, batch_begin:batch_end], new_theta, c[batch_begin:batch_end, :])
             batch_begin += mini_batch
             batch_end += mini_batch
         # calculate the rest of the images when the number of them is less than the mini batch
-        new_w = new_w - learning_rate * loss_grad(x[:, x.shape[1] - batch_end: x.shape[1]], new_w, c[x.shape[1] - batch_end: x.shape[1], :])
-    return new_w
+        new_theta = new_theta - learning_rate * loss_grad(x[:, x.shape[1] - batch_end: x.shape[1]], new_theta,
+                                                  c[x.shape[1] - batch_end: x.shape[1], :])
+    return new_theta
 
 
 def random_x(n, m):
-    mat0 = np.random.rand(n,m).flatten() # 'pictures' for example
-    mat1 = np.random.rand(n,m).flatten()
-    mat2 = np.random.rand(n,m).flatten()
-    mat3 = np.random.rand(n,m).flatten()
+    mat0 = np.random.rand(n, m).flatten()  # 'pictures' for example
+    mat1 = np.random.rand(n, m).flatten()
+    mat2 = np.random.rand(n, m).flatten()
+    mat3 = np.random.rand(n, m).flatten()
     return np.array([mat0, mat1, mat2, mat3]).T
-
 
 
 if __name__ == "__main__":
@@ -153,17 +156,14 @@ if __name__ == "__main__":
     # mat2 = np.arange(12).reshape(4, 3).flatten()
     # mat3 = np.arange(12).reshape(4, 3).flatten()
 
-
     # X = [x1|x2|x3..]
     given_x = random_x(4, 3)
-
 
     given_c = np.matrix([[1, 0, 0, 0], [0, 1, 1, 1]]).T
 
     n_dim, m_dim = given_x.shape  # 12 and 4
-    l_dim = given_c.shape[1]      # 2
+    l_dim = given_c.shape[1]  # 2
     rand_w = np.random.rand(n_dim, l_dim)
-
 
     # softmax_func(given_x, given_c, rand_w)
 
@@ -177,7 +177,6 @@ if __name__ == "__main__":
     #     weights = loss_func_SGD(gradient_softmax,given_x,weights,given_c,mini_batch=2)
     # print("weights",weights)
     # print("check sanity",mat1.T*weights)
-
 
     print("softmax:", softmax_func(given_x, rand_w, given_c))
 
