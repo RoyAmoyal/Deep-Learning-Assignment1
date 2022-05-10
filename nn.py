@@ -3,12 +3,13 @@ import functions as F
 
 
 class Model():
-    def __init__(self, data, labels, minibatch=1, epochs=1, learning_rate=0.001):
+    def __init__(self, data, labels , minibatch=1, epochs=1, learning_rate=0.001):
         self.data = data
         self.labels = labels
         self.mini_batch = minibatch
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self.batch_labels = None
 
         # TODO: initialize weights
         self.thetha_list = []
@@ -16,7 +17,7 @@ class Model():
 
         self.grad_x_list = []
         self.x_list = []
-        self.curr_c = []
+
 
     def forward(self, x):
         """
@@ -36,9 +37,9 @@ class Model():
             len(self.thetha_list) - 1]  # get the weights of the last layer (softmax weights)
         curr_w = softmax_theta[0]
         curr_b = softmax_theta[1]
-        self.grad_x_list.append(F.gradient_softmax(x, curr_w, self.labels))  # TODO WE NEED HERE GRADIENT W.R.T X
+        self.grad_x_list.append(F.gradient_softmax(x, (curr_w,curr_b), self.labels, wrt='x'))  # TODO WE NEED HERE GRADIENT W.R.T X
         self.x_list.append(x)
-        return F.softmax_func(x, curr_w, self.curr_c)
+        return F.softmax_func(x, curr_w, self.batch_labels)
 
     def add__hidden_layer(self, m, entries, res=False):
         """
@@ -68,8 +69,8 @@ class Model():
 
         last_x = self.x_list[layer_num]
         last_theta = self.thetha_list[layer_num]  # (w_last,b_last)
-        dfn_theta = F.gradient_softmax(last_x, last_theta[0],
-                                       c=self.curr_c)  # gradient of the loss function, last_theta(0) is w
+        dfn_theta = F.gradient_softmax(last_x, last_theta,
+                                       c=self.batch_labels, wrt='w')  # gradient of the loss function, last_theta(0) is w
         jacob_gradients.insert(0, dfn_theta)
 
         # update last layer
@@ -96,13 +97,15 @@ class Model():
         # loop over mini batches / epochs
         # TODO
         for epoch in range(self.epochs):
-            self.data.shape = self.data.shape[:, np.random.permutation(self.data.shape.shape[1])]  # Shuffle the data
+            indices_perm = np.random.permutation(self.data.shape.shape[1])
+            self.data.shape = self.data.shape[:, indices_perm]  # Shuffle the data
 
             # Iterations over the data (every epoch)
             batch_begin = 0
             batch_end = self.mini_batch - 1
             while batch_end <= self.data.shape[1]:  # until we still got enough images in the current epoch for the mini-batch
-                self.forward(self.data[:,batch_begin:batch_end])
+                self.forward(self.data[:, batch_begin:batch_end])
+                self.batch_labels = self.labels[indices_perm[batch_begin:batch_end]]  # TODO check if correct labels
                 jacob_gradients = self.backward()
                 self.update_theta(jacob_gradients)  # updating the weights
 

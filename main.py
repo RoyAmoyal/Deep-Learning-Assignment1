@@ -149,6 +149,11 @@ def random_x(n, m):
     return np.array([mat0, mat1, mat2, mat3]).T
 
 
+def read_mat(name):
+    from scipy.io import loadmat
+    return loadmat(name)
+
+
 if __name__ == "__main__":
     # example of pictures
     # mat0 = np.arange(12).reshape(4, 3).flatten()
@@ -177,6 +182,11 @@ if __name__ == "__main__":
     #     weights = loss_func_SGD(gradient_softmax,given_x,weights,given_c,mini_batch=2)
     # print("weights",weights)
     # print("check sanity",mat1.T*weights)
+    import pandas as pd
+    mat = read_mat('../Data/SwissRollData.mat')
+    X = pd.DataFrame(mat['Yt']).to_numpy()
+    C = pd.DataFrame(mat['Ct']).to_numpy().T
+
 
     print("softmax:", softmax_func(given_x, rand_w, given_c))
 

@@ -11,11 +11,12 @@ def random_x(n, m):
 
 def x_w_c():
     x = random_x(4, 3)
-    c = np.matrix([[1, 0, 0, 0], [0, 1, 1, 1]]).T
+    c = np.matrix([[1, 0, 0, 0], [0, 1, 1, 1], [0, 0, 0, 0]]).T
     n_dim, m_dim = x.shape  # 12 and 4
     l_dim = c.shape[1]      # 2
     w = np.random.rand(n_dim, l_dim)
-    return x, w, c
+    b = np.random.rand(m_dim, l_dim)
+    return x, w, c, b
 
 def softmax_grad_test():
     softmax = fn.softmax_func
@@ -33,8 +34,8 @@ def softmax_grad_test():
         print(i+1, "\t", abs(fk - f0), "\t", abs(fk - f1))
 
 # softmax_grad_test()
-x, w, c = x_w_c()
-print(fn.gradient_softmax(x, w, c))
+x, w, c, b = x_w_c()
+print(fn.gradient_softmax(x, (w, b), c, wrt='b'))
 
 
 
