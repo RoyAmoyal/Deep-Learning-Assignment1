@@ -35,8 +35,6 @@ def gradient_softmax(x, w, c):
 def relu(x):
     return np.maximum(x, 0)
 
+
 def grad_relu(x):
     return (x > 0) * 1
-
-
-
