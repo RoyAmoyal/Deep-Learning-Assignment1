@@ -32,8 +32,9 @@ def softmax_grad_test():
         f1 = f0 + epsk*w_noise.T*softmax_grad(x, w, c)
         print(i+1, "\t", abs(fk - f0), "\t", abs(fk - f1))
 
-softmax_grad_test()
-
+# softmax_grad_test()
+x, w, c = x_w_c()
+print(fn.gradient_softmax(x, w, c))
 
 
 
