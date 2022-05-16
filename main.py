@@ -1,7 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from NeuralNetwork import Model
 from scipy.special import softmax
-
+import functions as f
 
 # def softmax(x):
 #     # z--> linear part.
@@ -164,15 +165,21 @@ if __name__ == "__main__":
     # X = [x1|x2|x3..]
     given_x = random_x(4, 3)
 
-    given_c = np.matrix([[1, 0, 0, 0], [0, 1, 1, 1]]).T
+    given_c = np.matrix([[1, 0, 0, 0], [0, 1, 1, 1]])
 
     n_dim, m_dim = given_x.shape  # 12 and 4
     l_dim = given_c.shape[1]  # 2
-    rand_w = np.random.rand(n_dim, l_dim)
+    # rand_w = np.random.rand(n_dim, l_dim)
+    # rand_b = np.random.rand(m_dim, 1)
 
+    model = Model(given_x,given_c,minibatch=2)
+    model.add_hidden_layer(20,12)
+    model.add_hidden_layer(10,20)
+    model.add_softmax_layer(2,10)
+    model.train()
     # softmax_func(given_x, given_c, rand_w)
 
-    # print(gradient_softmax(given_x, rand_w, given_c))
+    # print(f.gradient_softmax(given_x, (rand_w,rand_b), given_c,"b"))
     # print(np.sum(c,axis=1))
     # print(np.divide(mat,np.sum(c,axis=1)))
 
@@ -182,22 +189,22 @@ if __name__ == "__main__":
     #     weights = loss_func_SGD(gradient_softmax,given_x,weights,given_c,mini_batch=2)
     # print("weights",weights)
     # print("check sanity",mat1.T*weights)
-    import pandas as pd
-    mat = read_mat('../Data/SwissRollData.mat')
-    X = pd.DataFrame(mat['Yt']).to_numpy()
-    C = pd.DataFrame(mat['Ct']).to_numpy().T
+    # import pandas as pd
+    # mat = read_mat('./Data/SwissRollData.mat')
+    # X = pd.DataFrame(mat['Yt']).to_numpy()
+    # C = pd.DataFrame(mat['Ct']).to_numpy().T
+    #
 
-
-    print("softmax:", softmax_func(given_x, rand_w, given_c))
-
-    data = given_x
-    new_w2 = rand_w
-    print(given_x.T @ new_w2)
-    for epoch in range(10010):
-        new_w2 = loss_func_SGD(gradient_softmax, data, new_w2, c=given_c, mini_batch=4)
-    print(given_x.T @ new_w2)
-
-    print("softmax:", softmax_func(given_x, new_w2, given_c))
+    # print("softmax:", softmax_func(given_x, rand_w, given_c))
+    #
+    # data = given_x
+    # new_w2 = rand_w
+    # print(given_x.T @ new_w2)
+    # for epoch in range(10010):
+    #     new_w2 = loss_func_SGD(gradient_softmax, data, new_w2, c=given_c, mini_batch=4)
+    # print(given_x.T @ new_w2)
+    #
+    # print("softmax:", softmax_func(given_x, new_w2, given_c))
 
     # m,b = new_w2
     # print(data)

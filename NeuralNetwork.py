@@ -28,7 +28,7 @@ class Model():
         for layer in self.thetha_list[:-1]:
             curr_w = layer[0]
             curr_b = layer[1]
-            x = np.add(curr_w @ x, curr_b)
+            x = F.relu(np.add(curr_w @ x, curr_b))
             self.grad_x_list.append(np.multiply(curr_w, F.grad_relu(x)))
             self.x_list.append(x)
 
@@ -37,11 +37,11 @@ class Model():
         curr_w = softmax_theta[0]
         curr_b = softmax_theta[1]
         self.grad_x_list.append(
-            F.gradient_softmax(x, (curr_w, curr_b), self.labels, wrt='x'))  # TODO WE NEED HERE GRADIENT W.R.T X
+            F.gradient_softmax(x, (curr_w, curr_b), self.labels, wrt='x'))
         self.x_list.append(x)
         return F.softmax_func(x, curr_w, self.batch_labels)
 
-    def add__hidden_layer(self, m, entries, res=False):
+    def add_hidden_layer(self, m, entries, res=False):
         """
         Wx + b right now fix size
         :param n:
@@ -54,6 +54,11 @@ class Model():
         W mashu x n + b
         """
         # W*X W
+        w = np.random.rand(m, entries)
+        b = np.random.rand(m, 1)
+        self.thetha_list.append((w, b))
+
+    def add_softmax_layer(self, m, entries, res=False):
         w = np.random.rand(m, entries)
         b = np.random.rand(m, 1)
         self.thetha_list.append((w, b))
@@ -98,9 +103,10 @@ class Model():
         # loop over mini batches / epochs
         # TODO
         for epoch in range(self.epochs):
-            indices_perm = np.random.permutation(self.data.shape.shape[1])
-            self.data.shape = self.data.shape[:, indices_perm]  # Shuffle the data
-
+            indices_perm = np.random.permutation(self.data.shape[1])
+            self.data = self.data[:, indices_perm]  # Shuffle the data
+            print(self.labels)
+            self.labels = np.array(self.labels)[:,indices_perm]
             # Iterations over the data (every epoch)
             batch_begin = 0
             batch_end = self.mini_batch - 1

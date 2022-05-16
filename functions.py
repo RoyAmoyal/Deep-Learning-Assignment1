@@ -21,24 +21,28 @@ def softmax_func(x, w, c):  # loss func!
 def gradient_softmax(x, theta, c, wrt="w"):
     w, b = theta
     m_dim2 = x.shape[1]
-    if wrt=='w':
+    if wrt == 'w':
         # print("shape c",c.shape)
         # print(x.shape)
-        # print(w.shape)
         # print(c.shape)
         # print((np.divide(np.exp(x.T @ w), (np.sum(np.exp(x.T @ w), axis=1)).reshape((m_dim2, 1))) - c))
         # print("before before you yay here", np.subtract(np.divide(np.exp(x.T @ w), np.sum(np.exp(x.T @ w), axis=1).reshape(m_dim2, 1)),c))
         # print("yay",(x@(np.divide(np.exp(x.T @ w), (np.sum(np.exp(x.T @ w), axis=1)).reshape((m_dim2, 1))) - c)))
-        soft_grad = (x @ (np.divide(np.exp(x.T @ w + b), (np.sum(np.exp(x.T @ w + b), axis=1)).reshape((m_dim2, 1))) - c)) \
+        soft_grad = (x @ (
+                    np.divide(np.exp(x.T @ w + b), (np.sum(np.exp(x.T @ w + b), axis=1)).reshape((m_dim2, 1))) - c)) \
                     / x.shape[1]
         return soft_grad
-    elif wrt=='x':
-        soft_grad = (w @ (np.divide(np.exp(x.T @ w + b), (np.sum(np.exp(x.T @ w + b), axis=1)).reshape((m_dim2, 1))) - c).T) \
+    elif wrt == 'x':
+        soft_grad = (w @ (
+                    np.divide(np.exp(x.T @ w + b), (np.sum(np.exp(x.T @ w + b), axis=1)).reshape((m_dim2, 1))) - c).T) \
                     / x.shape[1]
         return soft_grad
     else:  # bias
-        soft_grad = (np.divide(np.exp(x.T @ w + b), (np.sum(np.exp(np.add(x.T @ w ,b)), axis=1)).reshape((m_dim2, 1))) - c) \
+        soft_grad = (np.divide(np.exp(x.T @ w + b),
+                               (np.sum(np.exp(np.add(x.T @ w, b)), axis=1)).reshape((m_dim2, 1))) - c) \
                     / x.shape[1]
+
+        soft_grad = np.sum(soft_grad,axis=0).T
         return soft_grad
 
 
