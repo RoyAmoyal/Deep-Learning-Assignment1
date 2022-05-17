@@ -163,16 +163,16 @@ if __name__ == "__main__":
     # mat3 = np.arange(12).reshape(4, 3).flatten()
 
     # X = [x1|x2|x3..]
+    print("lol")
     given_x = random_x(4, 3)
 
-    given_c = np.matrix([[1, 0, 0, 0], [0, 1, 1, 1]])
-
+    given_c = np.matrix([[1, 0, 0, 0], [0, 1, 1, 1]]).T
     n_dim, m_dim = given_x.shape  # 12 and 4
     l_dim = given_c.shape[1]  # 2
     # rand_w = np.random.rand(n_dim, l_dim)
     # rand_b = np.random.rand(m_dim, 1)
 
-    model = Model(given_x,given_c,minibatch=2)
+    model = Model(given_x,given_c,minibatch=1)
     model.add_hidden_layer(20,12)
     model.add_hidden_layer(10,20)
     model.add_softmax_layer(2,10)
@@ -190,10 +190,10 @@ if __name__ == "__main__":
     # print("weights",weights)
     # print("check sanity",mat1.T*weights)
     # import pandas as pd
-    # mat = read_mat('./Data/SwissRollData.mat')
-    # X = pd.DataFrame(mat['Yt']).to_numpy()
-    # C = pd.DataFrame(mat['Ct']).to_numpy().T
-    #
+    mat = read_mat('./Data/SwissRollData.mat')
+    X = pd.DataFrame(mat['Yt']).to_numpy()
+    C = pd.DataFrame(mat['Ct']).to_numpy().T
+    #a
 
     # print("softmax:", softmax_func(given_x, rand_w, given_c))
     #

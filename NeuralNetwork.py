@@ -28,18 +28,20 @@ class Model():
         for layer in self.thetha_list[:-1]:
             curr_w = layer[0]
             curr_b = layer[1]
+            print("before relu", x.shape)
             x = F.relu(np.add(curr_w @ x, curr_b))
-            self.grad_x_list.append(np.multiply(curr_w, F.grad_relu(x)))
-            self.x_list.append(x)
-
-        softmax_theta = self.thetha_list[
-            len(self.thetha_list) - 1]  # get the weights of the last layer (softmax weights)
+            print("after relu", x.shape)
+            self.grad_x_list.append(np.array(curr_w.T @ F.grad_relu(x)))
+            self.x_list.append(np.array(x))
+        # get the weights of the last layer (softmax weights)
+        softmax_theta = self.thetha_list[len(self.thetha_list) - 1]
         curr_w = softmax_theta[0]
         curr_b = softmax_theta[1]
         self.grad_x_list.append(
-            F.gradient_softmax(x, (curr_w, curr_b), self.labels, wrt='x'))
-        self.x_list.append(x)
-        return F.softmax_func(x, curr_w, self.batch_labels)
+            F.gradient_softmax(x, (curr_w, curr_b), self.batch_labels, wrt='x'))
+        x = F.softmax_func(x, curr_w, self.batch_labels)
+
+        return x
 
     def add_hidden_layer(self, m, entries, res=False):
         """
@@ -58,9 +60,9 @@ class Model():
         b = np.random.rand(m, 1)
         self.thetha_list.append((w, b))
 
-    def add_softmax_layer(self, m, entries, res=False):
+    def add_softmax_layer(self, entries, m, res=False):
         w = np.random.rand(m, entries)
-        b = np.random.rand(m, 1)
+        b = np.random.rand(1, entries)
         self.thetha_list.append((w, b))
 
     def backward(self):
@@ -74,27 +76,55 @@ class Model():
 
         last_x = self.x_list[layer_num]
         last_theta = self.thetha_list[layer_num]  # (w_last,b_last)
-        dfn_theta = F.gradient_softmax(last_x, last_theta,
+        print(last_theta[0].shape)
+        print("lallaa")
+        print(len(self.thetha_list))
+        print(len(self.x_list))
+        print(len(self.grad_x_list))
+
+
+
+        print("lalala")
+        grad_w = F.gradient_softmax(last_x, last_theta,
                                        c=self.batch_labels,
                                        wrt='w')  # gradient of the loss function, last_theta(0) is w
-        jacob_gradients.insert(0, dfn_theta)
+        grad_b = F.gradient_softmax(last_x, last_theta,
+                                       c=self.batch_labels,
+                                       wrt='b')  # gradient of the loss function, last_theta(0) is w
+
+        jacob_gradients.insert(0, [grad_w, grad_b])
 
         # update last layer
         v = self.grad_x_list[layer_num]
-        for curr_theta in reversed(self.thetha_list[:len(self.thetha_list) - 2]):  # TODO check indexes
+        print("first v", v.shape)
+        for curr_theta in reversed(self.thetha_list[:len(self.thetha_list)-1]):  # TODO check indexes
             layer_num -= 1
             curr_w, curr_b = curr_theta
             curr_x = self.x_list[layer_num]
-            grad_w = np.multiply(F.grad_relu(curr_x), v) @ curr_x.T  # w.r.t W, J * v
-            grad_b = np.sum(np.multiply(F.grad_relu(curr_x), v))  # w.r.t bias TODO CHECK IF WE ITS COLUMNS SUM
-            jacob_gradients.insert(0, np.array([grad_w, grad_b]))  # in the correct order theta1,theta2,...,thetalosss
-            v = v @ self.grad_x_list[layer_num]  # add the next derivative to v for the backpropagation
+            # print("curr_x", curr_x)
+            # print((F.grad_relu(curr_x)).shape)
+            grad_w = np.multiply(F.grad_relu(np.add(curr_w @ curr_x, curr_b)),v) @ curr_x.T  # w.r.t W, J * v
+            # print(grad_w)
+            print("v shapeeeeeeeeee", v.shape)
+            grad_b = np.sum(np.multiply(F.grad_relu(np.add(curr_w @ curr_x, curr_b)),v),axis=1)  # w.r.t bias TODO CHECK IF WE ITS COLUMNS SUM
+            # print(len(grad_w))
+            # print(len(grad_b.shape))
 
+            jacob_gradients.insert(0, ([grad_w, grad_b]))  # in the correct order theta1,theta2,...,thetalosss
+            print("shapes")
+            print(self.grad_x_list[layer_num].shape)
+            if layer_num == 0:
+                break
+            v = (self.grad_x_list[layer_num].T @ v) # add the next derivative to v for the backpropagation
+            print("v newwww shape",v.shape)
         return jacob_gradients  # the gradients in rows -df1-,-df2- and so on
 
     def update_theta(self, jacob_gradients):
         for index, grad in enumerate(jacob_gradients):
-            self.thetha_list[index] = self.thetha_list[index] - self.learning_rate * grad
+            # print("shape of grad", grad.shape)
+            # print(len(self.thetha_list[index]))
+            self.thetha_list[index][0] = np.array(self.thetha_list[index][0]) - self.learning_rate * np.array(grad[0])
+            self.thetha_list[index][1] = np.array(self.thetha_list[index][1]) - self.learning_rate * np.array(grad[1])
 
     # def resblock():
     #     pass
@@ -106,14 +136,15 @@ class Model():
             indices_perm = np.random.permutation(self.data.shape[1])
             self.data = self.data[:, indices_perm]  # Shuffle the data
             print(self.labels)
-            self.labels = np.array(self.labels)[:,indices_perm]
+            self.labels = np.array(self.labels)[indices_perm, :]
             # Iterations over the data (every epoch)
             batch_begin = 0
             batch_end = self.mini_batch - 1
-            while batch_end <= self.data.shape[
-                1]:  # until we still got enough images in the current epoch for the mini-batch
-                self.forward(self.data[:, batch_begin:batch_end])
-                self.batch_labels = self.labels[indices_perm[batch_begin:batch_end]]  # TODO check if correct labels
+            # until we still got enough images in the current epoch for the mini-batch
+            while batch_end <= self.data.shape[1]:
+                self.batch_labels = self.labels[batch_begin:batch_end + 1, :]
+                print("self.batch_labels right now", self.batch_labels)
+                self.forward(self.data[:, batch_begin:batch_end + 1])
                 jacob_gradients = self.backward()
                 self.update_theta(jacob_gradients)  # updating the weights
 
